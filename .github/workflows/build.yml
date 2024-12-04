@@ -1,0 +1,49 @@
+name: build-image
+
+on:
+  workflow_dispatch:
+    inputs:
+      octavia_version:
+        type: string
+        description: "Octavia repository tag or branch (e.g. 'stable/2024.1')"
+        default: stable/2024.1
+      base_os:
+        type: string
+        description: "Base operating system (e.g. 'ubuntu-minimal')"
+        default: ubuntu-minimal
+      dist_release_id:
+        type: string
+        description: "Distribution release id (e.g. 'jammy')"
+        default: jammy
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+          cache: "pip"
+
+      - name: Install dependencies
+        env:
+          OCTAVIA_VERSION: ${{ inputs.octavia_version }}
+        run: |
+          python3 -m venv venv
+          venv/bin/pip install -U pip
+          venv/bin/pip install -r requirements.txt
+          sudo apt install -y qemu-utils git kpartx debootstrap
+          git clone -b $OCTAVIA_VERSION https://opendev.org/openstack/octavia
+
+      - name: Run diskimage-builder
+        env:
+          BASE_OS: ${{ inputs.base_os }}
+          DIST_RELEASE_ID: ${{ inputs.dist_release_id }}
+        run: |
+          source venv/bin/activate
+          cd octavia/diskimage-create
+          ./diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID
