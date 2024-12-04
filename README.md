@@ -21,7 +21,9 @@ git clone -b stable/2024.1 https://opendev.org/openstack/octavia
 
 Build image:
 ```sh
-octavia/diskimage-create/diskimage-create.sh -a amd64 -i ubuntu-minimal -d jammy -o amphora-x64-haproxy.qcow2
+octavia/diskimage-create/diskimage-create.sh \
+    -a amd64 -i ubuntu-minimal -d jammy \
+    -o amphora-x64-haproxy.qcow2
 ```
 
 ### GitHub Workflow
