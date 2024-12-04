@@ -7,6 +7,10 @@ on:
         type: string
         description: "Octavia repository tag or branch (e.g. 'stable/2024.1')"
         default: stable/2024.1
+      openstack_release:
+        type: string
+        description: "OpenStack release name (e.g. 'caracal')"
+        default: caracal
       base_os:
         type: string
         description: "Base operating system (e.g. 'ubuntu-minimal')"
@@ -15,6 +19,9 @@ on:
         type: string
         description: "Distribution release id (e.g. 'jammy')"
         default: jammy
+
+env:
+  IMAGE_NAME: amphora-x64-haproxy-${{ inputs.openstack_release }}-${{ inputs.base_os }}-${{ inputs.dist_release_id }}
 
 jobs:
   build-image:
@@ -45,5 +52,13 @@ jobs:
           DIST_RELEASE_ID: ${{ inputs.dist_release_id }}
         run: |
           source venv/bin/activate
-          cd octavia/diskimage-create
-          ./diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID
+          octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -o $IMAGE_NAME.qcow2
+          sha256sum $IMAGE_NAME.qcow2 > $IMAGE_NAME.qcow2.sha256
+
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: |
+            *.qcow2
+            *.qcow2.sha256
