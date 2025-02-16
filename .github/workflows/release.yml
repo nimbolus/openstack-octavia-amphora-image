@@ -1,0 +1,150 @@
+name: release
+
+on:
+  schedule:
+    - cron: "0 0 1 * *" # every first day of the month
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - octavia_version: stable/2024.1
+            openstack_release: caracal
+            base_os: ubuntu-minimal
+            dist_release_id: jammy
+          - octavia_version: stable/2024.1
+            openstack_release: caracal
+            base_os: rocky
+            dist_release_id: 9
+    env:
+      IMAGE_NAME: amphora-x64-haproxy-${{ matrix.openstack_release }}-${{ matrix.base_os }}-${{ matrix.dist_release_id }}
+    outputs:
+      IMAGE_NAME: ${{ env.IMAGE_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+          cache: "pip"
+
+      - name: Install dependencies
+        env:
+          OCTAVIA_VERSION: ${{ matrix.octavia_version }}
+        run: |
+          python3 -m venv venv
+          venv/bin/pip install -U pip
+          venv/bin/pip install -r requirements.txt
+          sudo apt install -y qemu-utils git kpartx debootstrap
+          git clone -b $OCTAVIA_VERSION https://opendev.org/openstack/octavia
+
+      - name: Run diskimage-builder
+        env:
+          BASE_OS: ${{ matrix.base_os }}
+          DIST_RELEASE_ID: ${{ matrix.dist_release_id }}
+        run: |
+          source venv/bin/activate
+          octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -o $IMAGE_NAME.qcow2
+          sha256sum $IMAGE_NAME.qcow2 > $IMAGE_NAME.qcow2.sha256
+
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: |
+            *.qcow2
+            *.qcow2.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: |
+            *.qcow2
+            *.qcow2.sha256
+
+  tag:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create tag
+        id: tagname
+        run: |
+          tag=$(date -u +'%Y-%m-%dT%H-%M-%SZ')
+          echo "TAGNAME=$tag" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.tagname.outputs.TAGNAME}}',
+              sha: context.sha
+            })
+
+      - name: Create draft release
+        id: draft_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tagname.outputs.TAGNAME }}
+          draft: true
+    outputs:
+      tag_name: ${{ steps.tagname.outputs.TAGNAME }}
+      release_id: ${{ steps.draft_release.outputs.id }}
+
+  release:
+    needs: tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+          - octavia_version: stable/2024.1
+            openstack_release: caracal
+            base_os: ubuntu-minimal
+            dist_release_id: jammy
+          - octavia_version: stable/2024.1
+            openstack_release: caracal
+            base_os: rocky
+            dist_release_id: 9
+    env:
+      IMAGE_NAME: amphora-x64-haproxy-${{ matrix.openstack_release }}-${{ matrix.base_os }}-${{ matrix.dist_release_id }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.IMAGE_NAME }}
+
+      - name: Attach artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.tag.outputs.tag_name }}
+          draft: true
+          files: |
+            *.qcow2
+            *.qcow2.sha256
+
+  publish:
+    needs: [tag, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ needs.tag.outputs.release_id }},
+              draft: false
+            })
