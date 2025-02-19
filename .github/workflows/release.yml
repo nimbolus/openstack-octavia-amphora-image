@@ -48,6 +48,12 @@ jobs:
           BASE_OS: ${{ matrix.base_os }}
           DIST_RELEASE_ID: ${{ matrix.dist_release_id }}
         run: |
+          # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          #
           source venv/bin/activate
           octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -o $IMAGE_NAME.qcow2
           sha256sum $IMAGE_NAME.qcow2 > $IMAGE_NAME.qcow2.sha256
