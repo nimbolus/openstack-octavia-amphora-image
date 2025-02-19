@@ -52,15 +52,7 @@ jobs:
           octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -o $IMAGE_NAME.qcow2
           sha256sum $IMAGE_NAME.qcow2 > $IMAGE_NAME.qcow2.sha256
 
-      - name: Upload image
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.IMAGE_NAME }}
-          path: |
-            *.qcow2
-            *.qcow2.sha256
-
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.IMAGE_NAME }}
@@ -120,10 +112,10 @@ jobs:
     env:
       IMAGE_NAME: amphora-x64-haproxy-${{ matrix.openstack_release }}-${{ matrix.base_os }}-${{ matrix.dist_release_id }}
     steps:
-      - name: Download artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.IMAGE_NAME }}
+          pattern: ${{ env.IMAGE_NAME }}.*
 
       - name: Attach artifacts
         uses: softprops/action-gh-release@v2
