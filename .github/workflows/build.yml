@@ -19,6 +19,10 @@ on:
         type: string
         description: "Distribution release id (e.g. 'jammy')"
         default: jammy
+      image_size:
+        type: number
+        description: "Size of the image in gigabyte"
+        default: 2
 
 env:
   IMAGE_NAME: amphora-x64-haproxy-${{ inputs.openstack_release }}-${{ inputs.base_os }}-${{ inputs.dist_release_id }}
@@ -50,9 +54,10 @@ jobs:
         env:
           BASE_OS: ${{ inputs.base_os }}
           DIST_RELEASE_ID: ${{ inputs.dist_release_id }}
+          IMAGE_SIZE: ${{ inputs.image_size }}
         run: |
           source venv/bin/activate
-          octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -o $IMAGE_NAME.qcow2
+          octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -s $IMAGE_SIZE -o $IMAGE_NAME.qcow2
           sha256sum $IMAGE_NAME.qcow2 > $IMAGE_NAME.qcow2.sha256
 
       - name: Upload image
