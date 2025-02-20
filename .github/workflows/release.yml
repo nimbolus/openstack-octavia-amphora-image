@@ -15,12 +15,15 @@ jobs:
             openstack_release: caracal
             base_os: ubuntu-minimal
             dist_release_id: jammy
+            image_size: 2G
           - octavia_version: stable/2024.1
             openstack_release: caracal
             base_os: rocky
             dist_release_id: 9
+            image_size: 3G
     env:
       IMAGE_NAME: amphora-x64-haproxy-${{ matrix.openstack_release }}-${{ matrix.base_os }}-${{ matrix.dist_release_id }}
+      IMAGE_SIZE: ${{ matrix.image_size }}
     outputs:
       IMAGE_NAME: ${{ env.IMAGE_NAME }}
     steps:
@@ -47,10 +50,9 @@ jobs:
         env:
           BASE_OS: ${{ matrix.base_os }}
           DIST_RELEASE_ID: ${{ matrix.dist_release_id }}
-          DIB_NO_TMPFS: 1
         run: |
           source venv/bin/activate
-          octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -o $IMAGE_NAME.qcow2
+          octavia/diskimage-create/diskimage-create.sh -a amd64 -i $BASE_OS -d $DIST_RELEASE_ID -s $IMAGE_SIZE -o $IMAGE_NAME.qcow2
           sha256sum $IMAGE_NAME.qcow2 > $IMAGE_NAME.qcow2.sha256
 
       - name: Upload artifacts
