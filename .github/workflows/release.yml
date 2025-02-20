@@ -60,8 +60,7 @@ jobs:
         with:
           name: ${{ env.IMAGE_NAME }}
           path: |
-            *.qcow2
-            *.qcow2.sha256
+            *.qcow2*
 
   tag:
     needs: build
@@ -118,7 +117,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: ${{ env.IMAGE_NAME }}.*
+          pattern: ${{ env.IMAGE_NAME }}*
 
       - name: Attach artifacts
         uses: softprops/action-gh-release@v2
@@ -126,8 +125,7 @@ jobs:
           tag_name: ${{ needs.tag.outputs.tag_name }}
           draft: true
           files: |
-            *.qcow2
-            *.qcow2.sha256
+            ${{ env.IMAGE_NAME }}/*.qcow2*
 
   publish:
     needs: [tag, release]
