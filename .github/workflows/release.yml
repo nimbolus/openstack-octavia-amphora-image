@@ -43,6 +43,7 @@ jobs:
           python3 -m venv venv
           venv/bin/pip install -U pip
           venv/bin/pip install -r requirements.txt
+          sudo apt update
           sudo apt install -y qemu-utils git kpartx debootstrap
           git clone -b $OCTAVIA_VERSION https://opendev.org/openstack/octavia
 
