@@ -9,8 +9,8 @@ on:
         default: stable/2025.1
       openstack_release:
         type: string
-        description: "OpenStack release name (e.g. 'caracal')"
-        default: caracal
+        description: "OpenStack release name (e.g. 'epoxy')"
+        default: epoxy
       base_os:
         type: string
         description: "Base operating system (e.g. 'ubuntu-minimal')"
