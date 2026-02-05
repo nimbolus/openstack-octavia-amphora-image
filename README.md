@@ -16,7 +16,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 sudo apt install -y qemu-utils git kpartx debootstrap
 # clone octavia
-git clone -b stable/2024.1 https://opendev.org/openstack/octavia
+git clone -b stable/2025.1 https://opendev.org/openstack/octavia
 ```
 
 Build image:

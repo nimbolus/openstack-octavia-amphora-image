@@ -11,12 +11,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - octavia_version: stable/2024.1
+          - octavia_version: stable/2025.1
             openstack_release: caracal
             base_os: ubuntu-minimal
             dist_release_id: jammy
             image_size: 2
-          - octavia_version: stable/2024.1
+          - octavia_version: stable/2025.1
             openstack_release: caracal
             base_os: rocky
             dist_release_id: 9
@@ -104,11 +104,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - octavia_version: stable/2024.1
+          - octavia_version: stable/2025.1
             openstack_release: caracal
             base_os: ubuntu-minimal
             dist_release_id: jammy
-          - octavia_version: stable/2024.1
+          - octavia_version: stable/2025.1
             openstack_release: caracal
             base_os: rocky
             dist_release_id: 9
