@@ -16,11 +16,11 @@ jobs:
             base_os: ubuntu-minimal
             dist_release_id: jammy
             image_size: 2
-          - octavia_version: stable/2025.1
-            openstack_release: expoxy
-            base_os: rocky
-            dist_release_id: 9
-            image_size: 3
+          # - octavia_version: stable/2025.1
+          #   openstack_release: expoxy
+          #   base_os: rocky
+          #   dist_release_id: 9
+          #   image_size: 3
     env:
       IMAGE_NAME: amphora-x64-haproxy-${{ matrix.openstack_release }}-${{ matrix.base_os }}-${{ matrix.dist_release_id }}
       IMAGE_SIZE: ${{ matrix.image_size }}
